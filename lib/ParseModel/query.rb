@@ -1,6 +1,6 @@
 module ParseModel
   class Query < PFQuery
-    
+
     def setClassObject(classObject)
       @classObject = classObject
       self
@@ -15,7 +15,7 @@ module ParseModel
 
     def find(&block)
       return self.findObjects.map {|obj| @classObject.new(obj)} unless block_given?
-       
+
       self.findObjectsInBackgroundWithBlock(lambda do |objects, error|
         objects = objects.map {|obj| @classObject.new(obj)} if objects
         block.call(objects, error)
@@ -26,7 +26,7 @@ module ParseModel
       return @classObject.new(self.getFirstObject) unless block_given?
 
       self.getFirstObjectInBackgroundWithBlock(lambda do |object, error|
-        obj = @classObject.new(object) if object
+        obj = @classObject.new(object)
         block.call(obj, error)
       end)
     end

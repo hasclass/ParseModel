@@ -16,13 +16,13 @@ module ParseModel
       end
     end
 
+    # required by ParseModel::FieldAttributes::ClassMethods
+    def pfdelegate
+      @PFObject
+    end
+
     def method_missing(method, *args, &block)
-      if fields.include?(method)
-        @PFObject.objectForKey(method)
-      elsif fields.map {|f| "#{f}="}.include?("#{method}")
-        method = method.split("=")[0]
-        @PFObject.setObject(args.first, forKey:method)
-      elsif @PFObject.respond_to?(method)
+      if @PFObject.respond_to?(method)
         @PFObject.send(method, *args, &block)
       else
         super
@@ -34,21 +34,10 @@ module ParseModel
     end
 
     module ClassMethods
-      def fields(*args)
-        args.each {|arg| field(arg)}
-      end
-
-      def field(name)
-        @fields ||= []
-        @fields << name
-      end
+      include ParseModel::FieldAttributes::ClassMethods
 
       def query
         ParseModel::Query.alloc.initWithClassNameAndClassObject(self.name, classObject:self)
-      end
-
-      def get_fields
-        @fields
       end
     end
 

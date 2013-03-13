@@ -4,21 +4,19 @@ module ParseModel
 
     RESERVED_KEYS = ['username', 'password', 'email']
 
+    fields *RESERVED_KEYS
+
     def initialize
       @PFUser = PFUser.user
     end
 
+    # required by ParseModel::FieldAttributes::ClassMethods
+    def pfdelegate
+      @PFUser
+    end
+
     def method_missing(method, *args, &block)
-      if RESERVED_KEYS.include?(method)
-        @PFUser.send(method)
-      elsif RESERVED_KEYS.map {|f| "#{f}="}.include?("#{method}")
-        @PFUser.send(method, args.first)
-      elsif fields.include?(method)
-        @PFUser.objectForKey(method)
-      elsif fields.map {|f| "#{f}="}.include?("#{method}")
-        method = method.split("=")[0]
-        @PFUser.setObject(args.first, forKey:method)
-      elsif @PFUser.respond_to?(method)
+      if @PFUser.respond_to?(method)
         @PFUser.send(method, *args, &block)
       else
         super
@@ -30,29 +28,17 @@ module ParseModel
     end
 
     module ClassMethods
-      def fields(*args)
-        args.each {|arg| field(arg)}
-      end
-
-      def field(name)
-        @fields ||= []
-        @fields << name
-      end
+      include ParseModel::FieldAttributes::ClassMethods
 
       def current_user
         if PFUser.currentUser
           u = new
           u.PFUser = PFUser.currentUser
-          return u
+          u
         else
-          return nil
+          nil
         end
       end
-
-      def get_fields
-        @fields
-      end
-
     end
 
     def self.included(base)
